@@ -1,0 +1,26 @@
+# .gitignore
+
+# Ignore virtual environment
+venv/
+
+backtests_results/
+
+extensions/
+
+crypto_prices/
+
+# Ignore pipenv environment
+.Python
+pyvenv.cfg
+
+# Ignore pipenv PEP 582 and 560 environments
+__pypackages__/
+
+# Ignore the PyInstaller output directory
+dist/
+
+# Ignore Jupyter Notebook temporary files
+.ipynb_checkpoints/
+
+# Ignore VS Code directory
+.vscode/
