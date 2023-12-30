@@ -9,6 +9,10 @@ app = Flask(__name__)
 CORS(app)
 
 
+# log = logging.getLogger('flask')
+# log.setLevel(logging.CRITICAL)
+
+
 @app.route("/api/stock-num", methods=["GET"])
 def get_stock_info():
     stock_number = request.args.get("stock_number")
@@ -19,6 +23,8 @@ def get_stock_info():
     stock_data = back_tester.get_stock_info(stock_number)
 
     return jsonify(stock_data)
+
+
 
 if __name__ == "__main__":
     app.config['JSON_AS_ASCII'] = False
