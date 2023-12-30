@@ -1,11 +1,11 @@
 # .gitignore
 
 # Ignore virtual environment
-venv/
+Include/
 
 backtests_results/
 
-extensions/
+Lib/
 
 crypto_prices/
 

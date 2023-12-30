@@ -4,7 +4,7 @@ from flask_cors import CORS
 app = Flask(__name__)
 CORS(app)
 
-@app.route("/api/quantitative-trading", methods=["GET"])
+@app.route("/api/stock-num", methods=["GET"])
 def get_stock_data():
     return jsonify({"message": "Hello, world!"})
 
