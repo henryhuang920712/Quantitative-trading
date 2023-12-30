@@ -1,6 +1,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import os
+import json
 import pickle
 import warnings
 import pymongo
@@ -24,6 +25,8 @@ matplotlib.use('Agg')
 
 # prevent this warning:Matplotlib is currently using agg, which is a non-GUI backend, so cannot show the figure.
 warnings.filterwarnings("ignore", category=UserWarning, module="backtrader")
+
+FILE_PATH = os.path.dirname(os.path.realpath(__file__))
 
 # Create a Stratey
 class TestStrategy(bt.Strategy):
@@ -409,69 +412,86 @@ class TWSEData(bt.feeds.PandasData):
 class TWSEBacktester(Backtester):
     def __init__(self, start_time, end_time):
         super().__init__(start_time, end_time)
+        config_dir = os.path.join(FILE_PATH, '..', 'config.json')
 
-        def GetRawData():
-            mongo_url = "mongodb://localhost:27017"
-            db_name = "trading-project"
-            col_name = "stock-num"
+        # get the variables from config.json
+        with open(config_dir, "r") as f:
+            config = json.load(f)
+            self.mongo_url = config["MONGODB_URI"]
+            self.db_name = config["MONGODB_DBNAME"]
+            self.col_name = config["MONGODB_COLLECTION"]
 
-            try:
-                client = pymongo.MongoClient(mongo_url)
-                db = client[db_name]
-                col = db[col_name]
-                print("...Successfully connected to Database\n")
-            except:
-                print("...Failed to connect to Database\n")
-                raise
+        try:
+            self.client = pymongo.MongoClient(self.mongo_url)
+            self.db = self.client[self.db_name]
+            self.collection = self.db[self.col_name]
+            print("...Successfully connected to Database\n")
+        except:
+            print("...Failed to connect to Database\n")
+            raise
+    def get_stock_info(self, stock_num):
+        # get the data with _id = stock_num
+        data = self.collection.find_one({"_id": stock_num})
 
-            raw_data = list(col.find())
-            raw_data_revised = {data["_id"]: data for data in raw_data}
+        # sort the keys in prices, balance_sheet, income_statement, sales, trading_info
+        sequence = ["prices", "balance_sheet", "income_statement", "sales", "trading_info"]
+        for seq in sequence:
+            for key, value in data[seq].items():
+                date = ("-").join(key.split("-")[2:])
+                value["date"] = date
+            data[seq] = sorted(list(data[seq].values()), key=lambda x: x["date"])
 
-            return raw_data_revised
+        return data
 
-        self._raw_data = GetRawData()
 
-        def GetPriceData():
-            def ChangeDate(date_str):
-                year, month, day = map(int, date_str.split("/"))
-                return datetime(year + 1911, month, day)
+    def _GetAllRawData(self):
+        raw_data = list(self.collection.find())
+        raw_data_revised = {data["_id"]: data for data in raw_data}
 
-            price_data = {}
+        return raw_data_revised
 
-            for stock_num in self._raw_data:
-                redundant_signs = [",", "X", "-"]
+    def GetAllPriceData(self):
+        def ChangeDate(date_str):
+            year, month, day = map(int, date_str.split("/"))
+            return datetime(year + 1911, month, day)
 
-                # if "成交金額" is "0", remove the data from the list
-                prices = [data for data in self._raw_data[stock_num]["prices"].values() if data["開盤價"] != "--"]
+        price_data = {}
+        raw_data = self._GetAllRawData()
 
-                # if there is no data, skip
-                if len(prices) == 0:
-                    continue
+        for stock_num in raw_data:
+            redundant_signs = [",", "X", "-"]
 
-                prices_df = pd.DataFrame.from_dict(prices)
-                prices_df["日期"] = prices_df["日期"].map(ChangeDate)
-                    
-                # set index to datetime
-                prices_df.set_index("日期", inplace=True)
-                prices_df.sort_index(inplace=True)
+            # if "成交金額" is "0", remove the data from the list
+            prices = [data for data in raw_data[stock_num]["prices"].values() if data["開盤價"] != "--"]
 
-                # filter out the data that is not in the time range
-                prices_df = prices_df.loc[self.start_time:self.end_time]
+            # if there is no data, skip
+            if len(prices) == 0:
+                continue
 
-                # remove all redundant signs from every number
-                for col in prices_df.columns:
-                    for sign in redundant_signs:
-                        prices_df[col] = prices_df[col].str.replace(sign, '')
+            prices_df = pd.DataFrame.from_dict(prices)
+            prices_df["日期"] = prices_df["日期"].map(ChangeDate)
+                
+            # set index to datetime
+            prices_df.set_index("日期", inplace=True)
+            prices_df.sort_index(inplace=True)
 
-                # convert all numbers to float
-                prices_df = prices_df.astype(float)
+            # filter out the data that is not in the time range
+            prices_df = prices_df.loc[self.start_time:self.end_time]
 
-                # delete rows with same index
-                prices_df = prices_df[~prices_df.index.duplicated(keep='first')]
+            # remove all redundant signs from every number
+            for col in prices_df.columns:
+                for sign in redundant_signs:
+                    prices_df[col] = prices_df[col].str.replace(sign, '')
 
-                price_data[stock_num] = prices_df
+            # convert all numbers to float
+            prices_df = prices_df.astype(float)
 
-            return price_data
+            # delete rows with same index
+            prices_df = prices_df[~prices_df.index.duplicated(keep='first')]
+
+            price_data[stock_num] = prices_df
+
+        return price_data
 
         self._data_kwargs = {
             "open": "開盤價",
@@ -484,42 +504,43 @@ class TWSEBacktester(Backtester):
 
         self._set_price_data(GetPriceData(), TWSEData, self._data_kwargs)
 
-        def get_weighed_stock():
-            # read weighted_stock.csv as a dataframe and encoding as utf-8-sig
-            weighted_stock = pd.read_csv("info//weighted_stock.csv", encoding="utf-8-sig")
+    def get_weighed_stock():
+        csv_path = os.path.join(FILE_PATH, '..', 'info', 'weighted_stock.csv')
+        # read weighted_stock.csv as a dataframe and encoding as utf-8-sig
+        weighted_stock = pd.read_csv(csv_path, encoding="utf-8-sig")
 
-            # set index to "證券代號"
-            weighted_stock.set_index("證券代號", inplace=True)
+        # set index to "證券代號"
+        weighted_stock.set_index("證券代號", inplace=True)
 
-            return weighted_stock
+        return weighted_stock
 
-        self._weighted_stock = get_weighed_stock()
+        # self._weighted_stock = get_weighed_stock()
 
-        def get_turnover_rank():
-            # turnover is in the price_data
-            turnover_rank = {}
+    def get_turnover_rank(self, price_data):
+        # turnover is in the price_data
+        turnover_rank = {}
 
-            for stock_num in self._price_data:
-                for date in self._price_data[stock_num].index:
-                    if date not in turnover_rank:
-                        turnover_rank[date] = []
-                    now_turnover = self._price_data[stock_num].loc[date, "成交金額"]
-                    try:
-                        now_turnover = float(now_turnover)
-                    except:
-                        print(now_turnover, stock_num, date)
-                        raise
-                    turnover_rank[date].append((stock_num, now_turnover))
-            
-            # sort out the highest 30 turnover
-            for date in turnover_rank:
-                turnover_rank[date] = sorted(turnover_rank[date], key=lambda x: x[1], reverse=True)[:30]
-                turnover_rank[date] = [stock_num for stock_num, _ in turnover_rank[date]]
+        for stock_num in price_data:
+            for date in price_data[stock_num].index:
+                if date not in turnover_rank:
+                    turnover_rank[date] = []
+                now_turnover = price_data[stock_num].loc[date, "成交金額"]
+                try:
+                    now_turnover = float(now_turnover)
+                except:
+                    print(now_turnover, stock_num, date)
+                    raise
+                turnover_rank[date].append((stock_num, now_turnover))
+        
+        # sort out the highest 30 turnover
+        for date in turnover_rank:
+            turnover_rank[date] = sorted(turnover_rank[date], key=lambda x: x[1], reverse=True)[:30]
+            turnover_rank[date] = [stock_num for stock_num, _ in turnover_rank[date]]
 
 
-            return turnover_rank
+        return turnover_rank
 
-        self._turnover_rank = get_turnover_rank()
+        # self._turnover_rank = get_turnover_rank()
 
         # def test():
         #     _test = {}
@@ -535,6 +556,7 @@ class TWSEBacktester(Backtester):
         #     print(_test)
 
         # test()
+
     # convert database ids to stock_nums, methods, year, season, month, and day
     def ConvertId(self, *args):
         now_id = args[0]
@@ -594,10 +616,14 @@ def main():
     # result = test.execute("BNB", FibonRetraceStrategy, plot=True)
 
     test = TWSEBacktester("2020-01-01", "2022-12-31")
-    result = test.execute("2330", CrossoverStrategy, plot=True)
+
+    print(test.get_price_data("2330").loc["2020-01-01":"2020-01-31", :])
+    
+
+    # result = test.execute("2330", CrossoverStrategy, plot=True)
 
     
-    print(result["return"], result["buy_and_hold return"])
+    # print(result["return"], result["buy_and_hold return"])
     # print(test.turnover_rank)
 
     # test.execute_all(BullishAlignmentStrategy)
