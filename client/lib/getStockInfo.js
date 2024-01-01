@@ -9,7 +9,7 @@ export default async function GetStockInfo(stock_number) {
       }
   
       // Fetch data from the API endpoint
-      const response = await fetch(`http://localhost:8080/api/stock-num?stock_number=${stock_number}`);
+      const response = await fetch(`/api/stock-num?stock_number=${stock_number}`);
   
       // Check if the request was successful (status code 200)
       if (!response.ok) {
