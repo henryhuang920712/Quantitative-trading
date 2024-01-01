@@ -3,13 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "flask-dev": "..\\server\\Scripts\\python.exe ..\\server\\server.py > output.log 2>&1",
+    "next-dev": "next dev",
+    "dev": "concurrently \"yarn next-dev\" \"yarn flask-dev\"",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
     "bootstrap": "^5.3.2",
+"concurrently": "^8.2.2",
     "mongodb": "^6.3.0",
     "next": "14.0.4",
     "react": "^18",

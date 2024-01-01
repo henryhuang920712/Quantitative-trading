@@ -28,6 +28,7 @@ import datetime
 import ccxt
 from ccxt.base.errors import InvalidNonce, BadSymbol
 
+FILE_PATH = os.path.dirname(os.path.realpath(__file__))
 
 class Scraper:
     def __init__(self, start_time, end_time, headless=False, timer=0):
@@ -63,8 +64,8 @@ class Scraper:
                     }
             }
             options.add_experimental_option("prefs", prefs)
-            options.add_extension(
-                f"extensions\\gjknjjomckknofjidppipffbpoekiipm\\7.0.19_0.crx")
+            options.add_extension(FILE_PATH +
+                f"\\extensions\\gjknjjomckknofjidppipffbpoekiipm\\7.0.19_0.crx")
             options.add_argument('--no-sandbox')
             # options.page_load_strategy = 'eager'
 
@@ -133,10 +134,11 @@ class TWSEScraper(Scraper):
         
         # self.mongo_url = "mongodb+srv://hamburgerhenry13:mondrole20116@web-app.mjvkbro.mongodb.net/?retryWrites=true&w=majority"
         # read the mongo_url from json file
-        with open("config.json", "r") as f:
+        config_dir = os.path.join(FILE_PATH, '..', 'config.json')
+        with open(config_dir, "r") as f:
             config = json.load(f)
-            self.mongo_url = config["DB_URL"]
-            self.db_name = config["DB_NAME"]
+            self.mongo_url = config["MONGODB_URI"]
+            self.db_name = config["MONGODB_DBNAME"]
 
         self.__method_ref = {self.GetMonthlyPrices: "prices", self.GetBasicInfo: "basic_info",
                              self.GetBalanceSheet: "balance_sheet", self.GetIncomeStatement: "income_statement",
@@ -207,8 +209,8 @@ class TWSEScraper(Scraper):
 
         def GetMarketMakerInfo():
             # load market_maker_info.csv with all values as string
-            market_maker_info = pd.read_csv(
-                "info//market_maker_info.csv", dtype=str)
+            market_maker_info = pd.read_csv(FILE_PATH +
+                "//info//market_maker_info.csv", dtype=str)
 
             # turn the data into a dictionary with columns as keys
             market_maker_info = market_maker_info.to_dict(orient="list")
@@ -1380,9 +1382,13 @@ class CryptoScraper(Scraper):
             UpdateOldData()
 
 def main():
-    st_time = input("Please enter the start time (yyyy-mm-dd): ")
-    ed_time = input("Please enter the end time (yyyy-mm-dd): ")
-    timer = int(input("Please enter the timer (minutes): "))
+    # st_time = input("Please enter the start time (yyyy-mm-dd): ")
+    # ed_time = input("Please enter the end time (yyyy-mm-dd): ")
+    # timer = int(input("Please enter the timer (minutes): "))
+
+    st_time = "2020-01-01"
+    ed_time = "2023-12-01"
+    timer = 120
 
     # test
     scraper = TWSEScraper(st_time, ed_time, headless=False, timer=timer)
@@ -1394,7 +1400,7 @@ def main():
     #         print(x["day"])
 
     # scraper.GetWeightedStock()
-    scraper.execute(mode="single-threading")
+    scraper.execute(mode="multi-threading")
 
     # scraper.GetPriceData("BTC")
 
