@@ -7,6 +7,10 @@ backtests_results/
 
 Lib/
 
+bin/
+
+Scripts/
+
 crypto_prices/
 
 # Ignore pipenv environment
