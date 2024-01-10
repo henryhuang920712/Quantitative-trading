@@ -91,7 +91,6 @@ class BullishAlignmentStrategy(bt.Strategy):
             if not bullish_align:
                 self.close()
 
-
 class TurnoverRankStrategy(bt.Strategy):
     params = {
         "name": "TurnoverRankStrategy",

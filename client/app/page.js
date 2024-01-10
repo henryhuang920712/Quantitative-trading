@@ -3,6 +3,7 @@ import Container from 'react-bootstrap/Container';
 import Button from "react-bootstrap/Button";
 
 function HomeImage(props) {
+  
   return (
     <Container className="mw-100 mh-100 px-0 mx-0 position-relative z-0" style={{height: "90vh"}} id="image-container">
       <img src="/homepage.jpg" alt="Home"></img>
@@ -19,7 +20,6 @@ function HomeImage(props) {
     </Container>
   );
 }
-
 
 export default function Home() {
   return (

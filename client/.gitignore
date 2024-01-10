@@ -9,12 +9,11 @@
 # testing
 /coverage
 
-# output log
-/*.log
 
 # next.js
 /.next/
 /out/
+
 
 # production
 /build
