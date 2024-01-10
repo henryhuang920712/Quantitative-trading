@@ -1,9 +1,11 @@
 import './globals.css'
-import {NavBarItem} from '@/components/navbar'
+import {NavBarItem} from '@/components/stock_number/navbar'
 
 export const metadata = {
   title: 'Stock Vista',
   description: 'A stock market analysis tool',
+  // meta charset="utf-8"
+  charSet: 'utf-8',
 }
 
 export default function RootLayout({ children }) {
