@@ -10,7 +10,7 @@
 /coverage
 
 # output log
-output.log
+/output.log
 
 # next.js
 /.next/
