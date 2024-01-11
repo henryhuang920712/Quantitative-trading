@@ -1,17 +1,10 @@
 "use client";
 import Container from 'react-bootstrap/Container';
 
-import StockBasicInfo from '@/components/stock_number/stockBasicInfo';
-
-import StockCompInfo from '@/components/stock_number/stockCompInfo';
-import StockBalSheet from '@/components/stock_number/stockBalSheet';
-import StockIncStatement from '@/components/stock_number/stockIncStatement';
-import StockTradingInfo from '@/components/stock_number/stockTradingInfo';
+import {StockBasicInfo, StockCompInfo, StockBalSheet, StockIncStatement, StockTradingInfo, StockChart} from '@/components/stock_number/stockBasicInfo';
 import MyPortfolio from '@/components/stock_number/sidebar';
-import StockChart from '@/components/stock_number/stockChart';
 import Nav from 'react-bootstrap/Nav';
 import { useEffect, useState } from 'react';
-import { render } from 'react-dom';
 
 export default function StockInfoPage({params: {stock_number}}) {
     const [nowSelectedTab, setNowSelectedTab] = useState('a');

@@ -1,35 +1,32 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
-import {createChart} from 'lightweight-charts';
+import {useEffect, useState,  useRef } from 'react';
 import Container from 'react-bootstrap/Container';
-import { getStockPrices } from '@/lib/getStockInfo';
+import getStockIndex from '@/lib/getStockIndex';
+import {createChart} from 'lightweight-charts';
 
-export default function StockChart({stock_number}) {
-    const [pricesData, setPricesData] = useState(null);
+export function MainIndexChart() {
+    const [indexData, setIndexData] = useState(null);
     const parentElement = useRef(null);
     const hasMounted = useRef(false);
-
     useEffect(() => {
-        async function getStockPricesData() {
-            const nowPricesData = await getStockPrices(stock_number);
-            setPricesData(nowPricesData);
+        async function getStockIndexData() {
+            const nowStockIndexData = await getStockIndex('^TWII');
+            setIndexData(nowStockIndexData);
         }
         if (!hasMounted.current) {
-            getStockPricesData();
+            getStockIndexData();
             hasMounted.current = true;
         }
-    }, [stock_number]);
-
+    }, [])
     useEffect(() => {
-        if (parentElement.current && pricesData && hasMounted.current) {
+        if (parentElement.current && indexData && hasMounted.current) {
             const chart = createChart(parentElement.current, { autoSize: true});
             // size change listener
 
-
-            let data = pricesData.map(price => {
+            let data = indexData.map(price => {
                 // change date to string + 1911
-                return { time: price.dateString, open: price.open, high: price.high, low: price.low, close: price.close };
+                return { time: price.Date, open: price.Open, high: price.High, low: price.Low, close: price.Close };
             });
 
             const candlestickSeries = chart.addCandlestickSeries({
@@ -48,7 +45,7 @@ export default function StockChart({stock_number}) {
               }
     
         }
-    }, [pricesData]);
+    }, [indexData]);
     return (
         <Container fluid ref={parentElement} id="chart-container" className="w-100 h-100">
         </Container>

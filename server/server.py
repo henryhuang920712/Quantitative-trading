@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from tools.back_tester import TWSEBacktester
+from tools.yf_scraper import YFScraper
 
 back_tester = TWSEBacktester("2020-01-01", "2022-12-31")
+yf_scraper = YFScraper()
 
 app = Flask(__name__)
 
@@ -24,6 +26,16 @@ def get_stock_info():
 
     return jsonify(stock_data)
 
+@app.route("/api/stock-index", methods=["GET"])
+def get_stock_index():
+    stock_index = request.args.get("symbol")
+
+    if stock_index is None:
+        return jsonify({"error": "Stock index is missing"}), 400
+    
+    stock_data = yf_scraper.get_stock_index(stock_index)
+
+    return jsonify(stock_data)
 
 
 if __name__ == "__main__":
