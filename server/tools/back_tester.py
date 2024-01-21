@@ -437,7 +437,9 @@ class TWSEBacktester(Backtester):
         for seq in sequence:
             for key, value in data[seq].items():
                 date = ("-").join(key.split("-")[2:])
+                year, season, month, day = map(int, date.split("-"))
                 value["date"] = date
+                value["date_ad"] = f"{year + 1911}-{month:02d}-{day:02d}"
             data[seq] = sorted(list(data[seq].values()), key=lambda x: x["date"])
 
         return data

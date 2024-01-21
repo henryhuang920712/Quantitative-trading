@@ -92,3 +92,18 @@ export async function getStockPrices(stock_number) {
 		return pricesData;
 	}
 }
+
+export async function getStockBalSheet(stock_number) {
+	const stockData = await GetStockInfo(stock_number);
+
+	let balSheetData = [];
+	if (stockData && Array.isArray(stockData["balance_sheet"])) {
+		for (let balSheet of stockData["balance_sheet"]) {
+			balSheetData.push(balSheet);
+		} 
+		balSheetData.reverse();
+
+		return balSheetData;
+	}
+	return stockData["balance_sheet"];
+}

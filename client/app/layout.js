@@ -1,5 +1,6 @@
 import './globals.css'
-import {NavBarItem} from '@/components/stock_number/navbar'
+import {NavBarItem} from '@/components/navbar'
+import AuthProvider from '@/components/authProvider'
 
 export const metadata = {
   title: 'Stock Vista',
@@ -12,7 +13,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className="vh-100 vw-100 d-flex flex-column">
-      <NavBarItem />
+      <AuthProvider>
+          <NavBarItem />
+      </AuthProvider>
       {children}
       </body>
     </html>

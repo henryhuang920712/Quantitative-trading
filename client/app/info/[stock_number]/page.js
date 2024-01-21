@@ -2,7 +2,7 @@
 import Container from 'react-bootstrap/Container';
 
 import {StockBasicInfo, StockCompInfo, StockBalSheet, StockIncStatement, StockTradingInfo, StockChart} from '@/components/stock_number/stockBasicInfo';
-import MyPortfolio from '@/components/stock_number/sidebar';
+import MyPortfolio from '@/components/sidebar';
 import Nav from 'react-bootstrap/Nav';
 import { useEffect, useState } from 'react';
 
