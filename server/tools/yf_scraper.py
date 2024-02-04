@@ -5,6 +5,7 @@ import json
 import os
 from datetime import datetime
 
+
 FILE_PATH = os.path.dirname(os.path.abspath(__file__))
 
 class YFScraper:
@@ -61,5 +62,17 @@ class YFScraper:
 #     today = datetime.today().strftime("%Y-%m-%d")
 #     years_ago = (datetime.today() - pd.DateOffset(years=3)).strftime("%Y-%m-%d")
 #     test = YFScraper()
-#     # test.get_historical_data("^TWII", years_ago, today)
-#     print(test.get_stock_index("^TWII"))
+
+#     print(test.get_stock_index("^TWII")[0])
+    
+# Replace 'AAPL' with the ticker symbol of the desired stock
+stock_symbol = '3536.TW'
+
+# Get historical data including stock splits
+today = datetime.today().strftime("%Y-%m-%d")
+stock_data = yf.download(stock_symbol, start='2022-01-01', end=today, actions=True)
+stock_data = stock_data.reset_index()
+stock_data = stock_data.to_dict('records')
+
+# print the row
+print(stock_data)

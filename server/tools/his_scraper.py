@@ -70,8 +70,13 @@ class Scraper:
             # options.page_load_strategy = 'eager'
 
             if headless:
+                options.add_argument("--log-level=3")
+                options.add_argument("--ignore-certificate-errors")
+                options.add_argument('--allow-running-insecure-content')
                 options.add_argument('--headless=new')
+                options.add_argument("--disable-dev-shm-usage")
                 options.add_argument('--disable-gpu')
+                options.add_experimental_option('excludeSwitches', ['enable-logging'])
             return options
 
         self.options = GenerateOptions(headless)
@@ -1387,11 +1392,11 @@ def main():
     # timer = int(input("Please enter the timer (minutes): "))
 
     st_time = "2020-01-01"
-    ed_time = "2023-12-01"
+    ed_time = "2024-01-01"
     timer = 120
 
     # test
-    scraper = TWSEScraper(st_time, ed_time, headless=False, timer=timer)
+    scraper = TWSEScraper(st_time, ed_time, headless=True, timer=timer)
     # scraper = CryptoScraper(st_time, ed_time, headless=True, timer=timer)
 
     # test = scraper.time_intervals["day"]
