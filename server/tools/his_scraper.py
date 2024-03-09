@@ -86,7 +86,6 @@ class Scraper:
         self._exit_program = True
 
     def SetDriver(self):
-
         try:
             # service = ChromeService(ChromeDriverManager().install())
             driver = webdriver.Chrome(options=self.options)
@@ -156,8 +155,6 @@ class TWSEScraper(Scraper):
         self.__season_to_month = {
             1: 1, 2: 4, 3: 7, 4: 10
         }
-
-
 
         def GetOldData():
             myclient = self.__connect_to_mongo()
@@ -1396,7 +1393,10 @@ def main():
     timer = 120
 
     # test
-    scraper = TWSEScraper(st_time, ed_time, headless=True, timer=timer)
+    scraper = TWSEScraper(st_time, ed_time, headless=False, timer=timer)
+    print(scraper.GetStockNum())
+
+
     # scraper = CryptoScraper(st_time, ed_time, headless=True, timer=timer)
 
     # test = scraper.time_intervals["day"]
@@ -1405,7 +1405,7 @@ def main():
     #         print(x["day"])
 
     # scraper.GetWeightedStock()
-    scraper.execute(mode="multi-threading")
+    # scraper.execute(mode="multi-threading")
 
     # scraper.GetPriceData("BTC")
 

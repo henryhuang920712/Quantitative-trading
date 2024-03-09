@@ -74,9 +74,9 @@ def get_columns(key_name):
     return list(all_data)
 
 
-# result = get_columns("trading_info")
-# print(result)
-# print(len(result))
+result = get_columns("income_statement")
+print(result)
+print(len(result))
 
-print(list(mongo_data[0]["trading_info"].values())[0])
+# print(list(mongo_data[0]["income_statement"].values())[0], len(list(mongo_data[0]["income_statement"].values())[0]))
 

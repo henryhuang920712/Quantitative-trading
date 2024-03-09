@@ -621,6 +621,100 @@ def insert_trading_info():
     
     conn.commit()
 
+def insert_inc_statement():
+    # ['營業外損益', '合併前非屬共同控制股權損益', '收益', '支出及費用', '合併前非屬共同控制股權綜合損益淨額', '支出', '營業毛利(毛損)淨額', '淨利(淨損)歸屬於母公司業主', '已實現銷貨(損)益', '綜合損益總額歸屬於非控制權益', '營業毛利(毛損)', '淨利(損)歸屬於非控制權益', '營業收入', '綜合損益總額歸屬於母公司業主', '其他綜合損益(稅後)', '營業利益', '利息以外淨損益', '綜合損益總額歸屬於共同控制下前手權益', '繼續營業單位稅前損益', '營業利益(損失)', '其他綜合損益', '營業外收入及支出', '淨利(損)歸屬於共同控制下前手權益', '其他綜合損益(稅後淨額)', '繼續營業單位稅前純益(純損)', '本期稅後淨利(淨損)', '基本每股盈餘(元)', '其他收益及費損淨額', '原始認列生物資產及農產品之利益(損失)', '收入', '本期其他綜合損益(稅後淨額)', '本期綜合損益總額(稅後)', '繼續營業單位本期純益(純損)', '生物資產當期公允價值減出售成本之變動利益(損失)', '淨利(淨損)歸屬於共同控制下前手權益', '公司代號', '其他綜合損益(淨額)', '稅前淨利(淨損)', '繼續營業單位稅前淨利(淨損)', '淨利(損)歸屬於母公司業主', '淨利(淨損)歸屬於非控制權益', '停業單位損益', '營業費用', '所得稅費用(利益)', '淨收益', '公司名稱', '保險負債準備淨變動', '所得稅(費用)利益', '繼續營業單位本期淨利(淨損)', '本期淨利(淨損)', '利息以外淨收益', '繼續營業單位本期稅後淨利(淨損)', '本期綜合損益總額', '未實現銷貨(損)益', '利息淨收益', '營業成本', '呆帳費用,承諾及保證責任準備提存']
+    arranges = []
+
+    for now_data in mongo_data:
+        stock_num = now_data["_id"]
+        for key_string, inc_statement in now_data["income_statement"].items():
+            arranged = {}
+            date = key_string.split("-")[2:]
+            arranged["symbol"] = stock_num
+            year, month, day = int(date[0]) + 1911, int(date[2]), int(date[3])
+            formatted_date = datetime(year, month, day).strftime("%Y-%m-%d")
+            arranged["date"] = formatted_date
+
+            for key, value in inc_statement.items():
+                if key == "公司名稱" or key == "公司代號":
+                    revised_value = str(value)
+                else:
+                    if type(value) == str:
+                        revised_value = Decimal(f'{round(float(value.replace(",", "").replace("元", "").replace("--", "0")), 2):.2f}')
+                    else:
+                        if math.isnan(value):
+                            revised_value = Decimal("0.00")
+                            print(f"stock_num: {stock_num}, date: {formatted_date}, key: {key}, value: {value}")
+                        else:
+                            revised_value = Decimal(f'{value:.2f}')
+                arranged[key] = revised_value
+
+            arranges.append(arranged)
+
+    # delete the table "income_statement" if it exists
+    cursor.execute('''
+        DROP TABLE IF EXISTS [dbo].[income_statement]
+    ''')
+
+    # create a new table "income_statement"
+    cursor.execute('''
+    CREATE TABLE [dbo].[income_statement] (
+        id INT IDENTITY(1,1) PRIMARY KEY,
+        symbol NVARCHAR(40),
+        date DATE,
+        公司名稱 NVARCHAR(255),
+        公司代號 NVARCHAR(255),
+        營業收入 DECIMAL(35, 2),
+        營業成本 DECIMAL(35, 2),
+        營業毛利(毛損) DECIMAL(35, 2),
+        營業費用 DECIMAL(35, 2),
+        營業利益(損失) DECIMAL(35, 2),
+        營業外收入及支出 DECIMAL(35, 2),
+        營業外損益 DECIMAL(35, 2),
+        稅前淨利(淨損) DECIMAL(35, 2),
+        所得稅費用(利益) DECIMAL(35, 2),
+        繼續營業單位本期淨利(淨損) DECIMAL(35, 2),
+        停業單位損益 DECIMAL(35, 2),
+        本期淨利(淨損) DECIMAL(35, 2),
+        母公司業主(淨利)損益 DECIMAL(35, 2),
+        非控制權益(淨利)損益 DECIMAL(35, 2),
+        綜合損益總額 DECIMAL(35, 2),
+        母公司業主(綜合損益)淨額 DECIMAL(35, 2),
+        非控制權益(綜合損益) DECIMAL(35, 2),
+        基本每股盈餘(元) DECIMAL(35, 2),
+        營業外收入 DECIMAL(35, 2),
+        營業外支出 DECIMAL(35, 2),
+        繼續營業單位稅前淨利(淨損) DECIMAL(35, 2),
+        稅前淨利(淨損) DECIMAL(35, 2),
+        所得稅(費用)利益 DECIMAL(35, 2),
+        繼續營業單位本期稅後淨利(淨損) DECIMAL(35, 2),
+        稅後淨利(淨損) DECIMAL(35, 2),
+        合併前非屬共同控制股權損益 DECIMAL(35, 2),
+        合併前非屬共同控制股權綜合損益淨額 DECIMAL(35, 2),
+        綜合損益總額歸屬於母公司業主 DECIMAL(35, 2),
+        綜合損益總額歸屬於非控制權益 DECIMAL(35, 2),
+        綜合損益總額歸屬於共同控制下前手權益 DECIMAL(35, 2),
+        綜合損益總額 DECIMAL(35, 2),
+        本期其他綜合損益(稅後淨額) DECIMAL(35, 2),
+        本期其他綜合損益(稅後) DECIMAL(35, 2),
+        本期其他綜合損益(淨額) DECIMAL(35, 2),
+        本期稅後淨利(淨損) DECIMAL(35, 2),
+        本期綜合損益總額(稅後) DECIMAL(35, 2),
+        未實現銷貨(損)益 DECIMAL(35, 2),
+        已實現銷貨(損)益 DECIMAL(35, 2),
+        原始認列生物資產及農產品之利益(損失) DECIMAL(35, 2),
+        其他收益及費損淨額 DECIMAL(35, 2),
+        其他收益及費損淨額 DECIMAL(35, 2),
+        利息以外淨收益 DECIMAL(35, 2),
+        利息以外淨損益 DECIMAL(35, 2),
+        利息淨收益 DECIMAL(35, 2),
+        利息以外淨損益 DECIMAL(35, 2),
+        呆帳費用,承諾及保證責任準備提存 DECIMAL(35, 2),
+        保險負債準備淨變動 DECIMAL(35, 2),
+        生物資產當期公允價值減出售成本之變動利益(損失) DECIMAL(35, 2)
+    )
+    ''')
+
 # print(len(arranges[0]))
     
 # insert_sales()
