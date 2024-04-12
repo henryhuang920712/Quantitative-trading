@@ -89,3 +89,39 @@ nav a.nav-link:hover {
 #balsheet-chart-legend {
     font-size: 11px;
 }
+
+#incStatement-table {
+    /* overflow */
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
+    border-collapse: collapse;
+}
+
+#incStatement-table tr {
+    width: fit-content;
+}
+
+#incStatement-table tr td:first-child {
+    background-color: rgb(240, 242, 244);
+    word-break: keep-all;
+}
+
+#incStatement-chart-legend {
+    font-size: 11px;
+}
+
+
+.stocknum-info-nav a {
+    font-size: 14px;
+    border-radius: 800px;
+    padding: 4px 8px;
+    background-color: var(--bs-secondary) !important;
+    border: 0.8px solid var(--bs-secondary) !important;
+    color: white !important;
+}
+
+.stocknum-info-nav a.active {
+    background-color: white !important;
+    color: black !important;
+}
