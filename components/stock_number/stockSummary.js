@@ -6,9 +6,9 @@ import Nav from 'react-bootstrap/Nav';
 import {GetStockInfo, GetStockInfoFugle, GetQuotesFugle} from '@/lib/getStockInfo';
 import {createChart} from 'lightweight-charts';
 import ProgressBar from 'react-bootstrap/ProgressBar';
-import {Bar} from 'react-chartjs-2';
-import {Chart as ChartJS, BarElement, CategoryScale, LinearScale, Tooltip, Legend} from 'chart.js';
-import { quotes } from '@fugle/marketdata/lib/rest/stock/snapshot/quotes';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+
 
 export default function StockSummary({stock_number}) {
     const [activeKey, setActiveKey] = useState("a");
@@ -42,21 +42,22 @@ function StockTrend({stock_number, activeKey="a"}) {
     const [quotesData, setQuotesData] = useState(null);
     const parentElement = useRef(null);
 
-    const BidsBarChart = () => {
-        const data = {
+    const bidRatio = (quotesData?.total?.tradeVolumeAtBid / quotesData?.total?.tradeVolume * 100).toFixed(2);
 
-        }
-
-        const options = {
-            "indexAxis": "y",
-            "layout": {
-                "padding": 10
-            }
-        }
-        ChartJS.register(BarElement, CategoryScale, LinearScale, Tooltip, Legend);
+    const BidPricesTable = () => {
         return (
-            <Container fluid id="stock-trend-bids" className="w-100 h-50">
-                <Bar data={data} options={options} />
+            <Container className="w-100 h-100">
+                <Row>
+                    <Col md={1}>量</Col>
+                    <Col md={3} className="pt-1"></Col>
+                    <Col md={2}>委買價</Col>
+                    <Col md={2}>委賣價</Col>
+                    <Col md={3}></Col>
+                    <Col md={1}>量</Col>
+                </Row>
+                {
+                    
+                }
             </Container>
         )
     }
@@ -65,11 +66,11 @@ function StockTrend({stock_number, activeKey="a"}) {
         async function getSummaryData() {
             const nowSummaryData = await GetStockInfoFugle(stock_number, "1");
             
-            const today = new Date().setHours(0, 0, 0, 0);
-            const todayData = nowSummaryData.filter(price => new Date(price.date).setHours(0, 0, 0, 0) === today);
+            const lastday = new Date(nowSummaryData[0].date).setHours(0, 0, 0, 0);
+            const lastdayData = nowSummaryData.filter(price => new Date(price.date).setHours(0, 0, 0, 0) === lastday);
             
-            todayData.sort((a, b) => new Date(a.date) - new Date(b.date));
-            setSummaryData(todayData);
+            lastdayData.sort((a, b) => new Date(a.date) - new Date(b.date));
+            setSummaryData(lastdayData);
         }
 
         async function getQuotesData() {
@@ -98,7 +99,6 @@ function StockTrend({stock_number, activeKey="a"}) {
                 // change date to string + 1911
                 return { time: Math.floor(nowTime.getTime() / 1000 - (nowTime.getTimezoneOffset() * 60)), value: price.close};
             });
-
             const areaSeries = chart.addBaselineSeries({ baseValue: { type: 'price', price: summaryData[0].open }, topLineColor: 'rgba( 38, 166, 154, 1)', topFillColor1: 'rgba( 38, 166, 154, 0.28)', topFillColor2: 'rgba( 38, 166, 154, 0.05)', bottomLineColor: 'rgba( 239, 83, 80, 1)', bottomFillColor1: 'rgba( 239, 83, 80, 0.05)', bottomFillColor2: 'rgba( 239, 83, 80, 0.28)' });
             try {
                 areaSeries.setData(data);
@@ -116,28 +116,17 @@ function StockTrend({stock_number, activeKey="a"}) {
     return (<>
         <Container fluid id="stock-trend-container" ref={parentElement} className="w-100 h-75">
         </Container>
-        <Container fluid id="stock-trend-progress" className="w-100 h-50">
+        <Container fluid id="stock-trend-progress" className="w-100 pb-2">
             <div className="d-flex flex-row justify-content-between">
                 <div className="fs-6 fw-bold">內盤</div>
                 <div className="fs-6 fw-bold">外盤</div>
             </div>
             <ProgressBar>
-                {
-                    () => {
-                        console.log(quotesData?.total.tradeVolumeAtBid, quotesData?.total.tradeVolume);
-                        const bidRatio = (quotesData?.total.tradeVolumeAtBid / quotesData.total.tradeVolume * 100).toFixed(2);
-                        const askRatio = 100 - bidRatio;
-                        return (
-                            <>
-                            <ProgressBar now={bidRatio} label={`${bidRatio}%`} variant="success" key={1} />
-                            <ProgressBar now={askRatio} label={`${askRatio}%`} variant="danger" key={2} />
-                            </>
-                        )
-                    }
-                }
-
+                <ProgressBar now={bidRatio} label={`${bidRatio}%`} variant="success" key={1} />
+                <ProgressBar now={100 - bidRatio} label={`${100 - bidRatio}%`} variant="danger" key={2} />
             </ProgressBar>
         </Container>
+        <BidPricesTable />
         </>
     )
 }
