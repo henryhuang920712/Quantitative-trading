@@ -3,29 +3,27 @@ import {useEffect, useState } from 'react';
 import Container from 'react-bootstrap/Container';
 import Button from "react-bootstrap/Button";
 import Badge from 'react-bootstrap/Badge';
-import {GetStockInfo} from '@/lib/getStockInfo';
+import {GetStockInfo, GetQuotesFugle} from '@/lib/getStockInfo';
 import {formatDate} from '@/lib/formatData';
 
 export default function StockBasicInfo( {stock_number}) {
     const [basicInfo, setBasicInfo] = useState(null);
-    const [lastPriceData, setLastPriceData] = useState(null);
-    const [diffValue, setDiffValue] = useState(null);
+    const [quotesData, setQuotesData] = useState(null);
 
     useEffect(() => {
         async function getStockBasicInfo() {
             const nowBasicInfo = await GetStockInfo(stock_number, "basic_info");
-            const pricesData = await GetStockInfo(stock_number, "prices");
-            pricesData.sort((a, b) => new Date(a.date) - new Date(b.date));
+            const nowQuotesData = await GetQuotesFugle(stock_number);
 
             setBasicInfo(nowBasicInfo[0]);
-            setLastPriceData(pricesData[pricesData.length - 1]);
+            setQuotesData(nowQuotesData);
 
-            // transfer the diff from string to float
-            setDiffValue(pricesData[pricesData.length - 1].close - pricesData[pricesData.length - 1].open);
         }
         getStockBasicInfo();
 
     }, [stock_number]);
+
+    const diffValue = quotesData?.changePercent;
 
     const DownArrow = () => {
         return (
@@ -64,14 +62,14 @@ export default function StockBasicInfo( {stock_number}) {
             </div>
             <div className="d-flex flex-row justify-content-between align-items-center">
                 <div className={`fs-1 fw-bold ${diffValue > 0 ? 'text-danger' : 'text-success'}`}>
-                    {lastPriceData?.close}
+                    {quotesData?.lastPrice}
                 </div>
                 <div className={`fs-5 fw-bold ${diffValue > 0 ? 'text-danger' : 'text-success'}`}>
-                    {lastPriceData && (diffValue > 0 ? <UpArrow /> : <DownArrow />)}&nbsp;    
-                    {lastPriceData && (diffValue > 0 ? diffValue.toFixed(2) : (-diffValue).toFixed(2))}
-                    {lastPriceData && ` (${(diffValue / lastPriceData.open * 100).toFixed(2)}%)`}
+                    {quotesData && (diffValue > 0 ? <UpArrow /> : <DownArrow />)}&nbsp;    
+                    {quotesData && (diffValue)}
+                    {quotesData && ` (${(diffValue / quotesData.openPrice * 100).toFixed(2)}%)`}
                 </div>
-                <div className="fs-5 fw-bold text-secondary">{lastPriceData && formatDate(lastPriceData.date)}</div>
+                <div className="fs-5 fw-bold text-secondary">{quotesData && quotesData.date}</div>
 
             </div>
         </Container>

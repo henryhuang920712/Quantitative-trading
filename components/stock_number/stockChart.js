@@ -6,6 +6,27 @@ import {createChart} from 'lightweight-charts';
 import {GetWeeklyPrices, GetMonthlyPrices} from '@/lib/formatData';
 import Nav from 'react-bootstrap/Nav';
 
+// function timeToTz(date, timeZone) {
+//     const zonedDate = new Date((typeof date === "string" ? new Date(date) : date).toLocaleString('en-US', {timeZone: timeZone}));
+//     return zonedDate.getTime() / 1000;
+// }   
+
+function timeToLocal(date) {
+    // Create a Date object from the timestamp
+    const d = new Date(date);
+
+    // Return the UTC timestamp
+    return Date.UTC(
+        d.getFullYear(),
+        d.getMonth(),
+        d.getDate(),
+        d.getHours(),
+        d.getMinutes(),
+        d.getSeconds(),
+        d.getMilliseconds()
+    ) / 1000;
+}
+
 export default function StockChart({stock_number}) {
     const [activeKey, setActiveKey] = useState('D');
     const [pricesData, setPricesData] = useState(null);
@@ -66,10 +87,11 @@ export default function StockChart({stock_number}) {
 
             // size change listener
             let data = pricesData.map(price => {
-                const nowTime = new Date(price.date);
                 // change date to string + 1911
-                return { time: Math.floor( nowTime.getTime() / 1000 - (nowTime.getTimezoneOffset() * 60)), open: price.open, high: price.high, low: price.low, close: price.close };
+                return { time: Math.floor( timeToLocal(price.date)), open: price.open, high: price.high, low: price.low, close: price.close };
             });
+            console.log(pricesData[pricesData.length - 1].date);
+            console.log(new Date(data[data.length - 1].time * 1000));
 
             const candlestickSeries = chart.addCandlestickSeries({
                 upColor: '#EF5350',
@@ -81,7 +103,7 @@ export default function StockChart({stock_number}) {
               
 
             let volumeData = pricesData.map(price => { 
-                return { time: Math.floor(new Date(price.date).getTime() / 1000), 
+                return { time: Math.floor(timeToLocal(price.date)), 
                 value: price.volume,
                 color: price.open > price.close ? '#26a69a' : '#ef5350'};
             });

@@ -111,6 +111,27 @@ nav a.nav-link:hover {
     font-size: 11px;
 }
 
+#stockrevenue-table {
+    /* overflow */
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
+    border-collapse: collapse;
+}
+
+#stockrevenue-table tr {
+    width: fit-content;
+}
+
+#stockrevenue-table tr td:first-child {
+    background-color: rgb(240, 242, 244);
+    word-break: keep-all;
+}
+
+#stockrevenue-chart-legend {
+    font-size: 11px;
+}
+
 
 .stocknum-info-nav a {
     font-size: 14px;

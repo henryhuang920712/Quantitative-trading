@@ -2,9 +2,6 @@ import { NextResponse } from 'next/server';
 import { RestClient} from '@fugle/marketdata';
 import "isomorphic-fetch";
 
-export const revalidate = 120;
-export const fetchCache = 'force-cache';
-
 export async function GET(request) {
     try {
         // Get the query parameters from the request URL

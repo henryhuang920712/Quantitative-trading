@@ -12,7 +12,7 @@ export async function GET(request) {
         const symbol = params.get("symbol");
         const stock = client.stock;   // Stock REST API client
 
-        const result = await stock.intraday.quote({ symbol: symbol });
+        const result = await stock.intraday.volumes({ symbol: symbol });
 
         // Return the fetched data
         return NextResponse.json( result ); 

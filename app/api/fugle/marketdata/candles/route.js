@@ -2,9 +2,6 @@ import { NextResponse } from 'next/server';
 import { RestClient} from '@fugle/marketdata';
 import "isomorphic-fetch";
 
-export const revalidate = 120;
-export const fetchCache = 'force-cache';
-
 export async function GET(request) {
     try {
         // Get the query parameters from the request URL
@@ -16,14 +13,24 @@ export async function GET(request) {
             "timeframe": params.get("type"),
         };
 
+        const stock = client.stock;   // Stock REST API client
+        let rawData = await stock.historical.candles(newParams);
 
         if (["D", "W", "M"].includes(newParams.timeframe)) {
             newParams.from = params.get("from");
             newParams.to = params.get("to");
-        }   
-        const stock = client.stock;   // Stock REST API client
+        } else {
+            let nowData = await stock.intraday.candles(newParams);
 
-        const rawData = await stock.historical.candles(newParams);
+            const dataA = rawData.data;
+            const dataB = nowData.data;
+            const notInA = dataB.filter(itemB =>
+                !dataA.some(itemA => itemA.date === itemB.date)
+              );
+              
+            rawData.data = dataA.concat(notInA);
+        }
+ 
         const result = Array.from(rawData.data.map((nowData)=>{return (
             {symbol: newParams.symbol, ...nowData, origin: "fugle"}
         )}))
