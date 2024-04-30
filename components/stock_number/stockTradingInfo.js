@@ -138,7 +138,7 @@ export default function StockTradingInfo({stock_number}) {
                                         <td>{formatNumString(data.foreign)}</td>
                                         <td>{formatNumString(data.investment)}</td>
                                         <td>{formatNumString(data.dealer)}</td>
-                                        <td>{formatNumString(data.total)}</td>
+                                        <td className={(data.total >= 0 ? "text-danger" : "text-success") + " fw-medium"}>{formatNumString(data.total)}</td>
                                     </tr>
                                 )
                             })

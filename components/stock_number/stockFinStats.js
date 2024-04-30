@@ -7,6 +7,12 @@ import Table from 'react-bootstrap/Table';
 import {formatDate, formatNumString} from '@/lib/formatData';
 import Nav from 'react-bootstrap/Nav';
 import Button from 'react-bootstrap/Button';
+import Dropdown from 'react-bootstrap/Dropdown';
+
+// get finFormat.json
+import finFormat from './finFormat.json';
+
+
 
 export default function StockFinStats({stock_number}) {
     const [activeKey, setActiveKey] = useState("a");
@@ -387,60 +393,106 @@ function StockBalSheet({stock_number}) {
 function StockIncStatement({stock_number}) {
     const [incStatement, setIncStatement] = useState(null);
     const [legendValue, setLegendValue] = useState(null);
-    const orderRef = {
-        rev: ["營業收入", "營業成本", "營業毛利(毛損)"],
-        pm: ["營業費用", "營業利益(損失)"],
-        ni: ["營業外收入及支出", "稅前淨利(淨損)", "所得稅費用(利益)", "繼續營業單位本期淨利(淨損)", "本期淨利(淨損)"],
-        oci: ["淨利(淨損)歸屬於母公司業主", "淨利(淨損)歸屬於非控制權益","其他綜合損益(淨額)", "本期綜合損益總額"],
-        eq: [ "綜合損益總額歸屬於母公司業主", "綜合損益總額歸屬於非控制權益", "基本每股盈餘(元)"],
-    }
+    const [seasonMode, setSeasonMode] = useState("單季");
+    const orderRef = finFormat.find(obj => obj.mode === "inc_statement" && obj.symbols.includes(stock_number)).format;
+
     const parentElement = useRef(null);
-    const hasMounted = useRef(false);
     const textBold = ["營業收入", "營業利益(損失)", "本期淨利(淨損)", "本期綜合損益總額", "基本每股盈餘(元)"]
 
-    const ArrangeIncStatement = (inc) => {
-        let incContent = {};
-        for (let nowCat in orderRef) {
-            for (let nowItem of orderRef[nowCat]) {
-                incContent[nowItem] = [nowItem];
-                for (let nowData in inc) {
-                    incContent[nowItem].push(nowData[nowItem]);
-                }
-            }
-        }
-        return incContent;
-    }
-
     const FitDataToChart = (inc, stringToFind) => {
-        const nowData = inc.map(data => {
-            let timestamp = parseInt(new Date(data.date).getTime() / 1000);
-            let number = data[stringToFind];
+        let newData = [];
+        for (let i = inc.date.length - 1; i >= 0; i--) {
+            let timestamp = parseInt(new Date(inc.date[i]).getTime() / 1000);
+            let number = inc[stringToFind][i];
             if (number === null) {
                 number = 0;
             }
-            return {time: timestamp, value: number};
-        })
+            newData.push({time: timestamp, value: number});
+        }
+        return newData;
+    }
+    const DeductSeason = (inc) => {
+        let newInc = {...inc};
+        for (let i = 0; i < newInc.date.length - 1; i++) {
+            const month = parseInt(newInc.date[i].split("-")[1]);
+            const season = Math.ceil(month / 3);
+            if (season > 1) {
+                for (let nowKey in newInc) {
+                    if (nowKey === "date") {
+                        continue;
+                    }
+                    newInc[nowKey][i] -= newInc[nowKey][i + 1];
+                }
+            }
+        }
+        return newInc;
+    }
 
-        nowData.sort((a, b) => a.time - b.time);
+    const AddSeason = (inc) => {
+        let newInc = {...inc};
+        for (let i = newInc.date.length - 2; i >= 0; i--) {
+            const month = parseInt(newInc.date[i].split("-")[1]);
+            const season = Math.ceil(month / 3);
+            if (season > 1) {
+                for (let nowKey in newInc) {
+                    if (nowKey === "date") {
+                        continue;
+                    }
+                    newInc[nowKey][i] += newInc[nowKey][i + 1];
+                }
+            }
+        }
+        return newInc;
+    }
 
-        return nowData;
+    const handleSeasonMode = (eventKey) => {
+        
+        if (incStatement === null) {
+            return;
+        }
+        let newInc = {...incStatement};
+        if (eventKey === "單季" && seasonMode === "累季") {
+            newInc = DeductSeason(newInc);
+        } else if (eventKey === "累季" && seasonMode === "單季") {
+            newInc = AddSeason(newInc);
+        }
+        setIncStatement(newInc);
+        setSeasonMode(eventKey);
     }
 
     useEffect(() => {
         async function getIncStatement() {
-            const nowInc = await GetStockInfo(stock_number, "inc_statement");
-
+            let nowInc = await GetStockInfo(stock_number, "inc_statement");
+            console.log(nowInc);
             // sort the data by date
-            nowInc.sort((a, b) => new Date(a.date) - new Date(b.date));
-            nowInc.reverse();
-            setIncStatement(nowInc);
+            nowInc.sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            const initLen = nowInc.length;
+            for (let i = initLen - 1; i >= 0; i--) {
+                const month = parseInt(nowInc[i].date.split("-")[1]);
+                const season = Math.ceil(month / 3);
+                if (season > 1) {
+                    // drop the data if it's not the first season
+                    nowInc.pop();
+                } else {
+                    break;
+                }
+            }
+            let newInc = ChangeFormat(nowInc, orderRef);
+            newInc = DeductSeason(newInc);
+
+            setIncStatement(newInc);
         }
         getIncStatement();
-        hasMounted.current = true;
     }, [stock_number]);
 
     useEffect(() => {
-        if (parentElement.current && incStatement&& hasMounted.current) {
+        if (parentElement.current && incStatement) {
+            // if it exists, clear the chart
+            if (document.getElementById("incStatement-chart-container")) {
+                document.getElementById("incStatement-chart-container").innerHTML = "";
+            }
+
             const chartOptions = { layout: { textColor: 'black', background: { type: 'solid', color: 'white' } }, autoSize: true};
             const chart = createChart(parentElement.current, chartOptions);
 
@@ -491,14 +543,13 @@ function StockIncStatement({stock_number}) {
             });
 
             chart.timeScale().fitContent();
-            hasMounted.current = false;
         }
     }, [incStatement])
 
     return (
         <Container fluid id="stockincStatement-container" className="w-100 h-100">
-            <div id="incStatement-chart-container" ref={parentElement} className="w-100 h-25 mb-5 mt-2">
-                <div id="incStatement-chart-legend" className="d-flex align-items-center flex-row">
+            <div className="w-100 h-25 mb-5 mt-2 row">
+                <div id="incStatement-chart-legend" className="d-flex align-items-center flex-row col-10">
                     <div className="me-2">
                         {legendValue && <Square color="--bs-dark" />}
                         {legendValue && `營業收入: ${legendValue[0]}`}
@@ -507,10 +558,21 @@ function StockIncStatement({stock_number}) {
                         {legendValue && <Square color="--bs-danger" />}
                         {legendValue && `營業利益(損失): ${legendValue[1]}`}
                     </div>
-                    <div className="me-2">
+                    <div className="">
                         {legendValue && <Square color="--bs-success" />}
                         {legendValue && `本期淨利(淨損): ${legendValue[2]}`}
                     </div>
+                </div>
+                <div className="col-2 mb-2 d-flex justify-content-center">
+                <Dropdown defaultChecked={seasonMode} onSelect={handleSeasonMode}>
+                <Dropdown.Toggle variant="success" size="sm" >{seasonMode}</Dropdown.Toggle>
+                <Dropdown.Menu>
+                    <Dropdown.Item eventKey="單季">單季</Dropdown.Item>
+                    <Dropdown.Item eventKey="累季">累季</Dropdown.Item>
+                </Dropdown.Menu>
+                </Dropdown>
+                </div>
+                <div id="incStatement-chart-container" ref={parentElement} className="h-100 w-100">
                 </div>
             </div>
             <Table hover responsive="sm" id="incStatement-table">
@@ -518,10 +580,10 @@ function StockIncStatement({stock_number}) {
                     <tr>
                         <th>年/季度</th>
                         {
-                            incStatement && incStatement.map((data, index) => {
+                            incStatement && incStatement.date.map((data, index) => {
                                 // split yy-ss-mm-dd then get yy and ss
-                                const year = parseInt(data.date.split("-")[0]);
-                                const month = parseInt(data.date.split("-")[1]);
+                                const year = parseInt(data.split("-")[0]);
+                                const month = parseInt(data.split("-")[1]);
                                 const season = Math.ceil(month / 3);
                                 return <th key={index}>{`${year} Q${season}`}</th>
                             })
@@ -530,21 +592,25 @@ function StockIncStatement({stock_number}) {
                 </thead>
                 <tbody className="text-center">
                     {
-                        incStatement && Object.keys(ArrangeIncStatement(incStatement)).map((item, index) => {
-                            return (
-                                <tr key={index} className={textBold.includes(item) ? "table-active" : ""}>
-                                    <td>{item}</td>
-                                    {
-                                        incStatement.map((data, index) => {
-                                            if (data[item] === undefined) {
-                                                console.log(item);
-                                            }
-                                            return <td key={index}>{formatNumString(data[item])}</td>
-                                        })
-                                    }
-                                </tr>
-                            )
-                        })
+                        (incStatement && (() => {
+                            return (Object.keys(incStatement)).map((item, index) => {
+                                if (item === "date") {
+                                    return;
+                                }
+                                return (
+                                    <tr key={index} className={textBold.includes(item) ? "table-active" : ""}>
+                                        <td>{item}</td>
+                                        {
+                                            (incStatement[item]).map((data, index) => {
+                                                return <td key={index}>{formatNumString(data)}</td>
+                                            })
+                                        }
+                                    </tr>
+                                )
+                            })
+                        })())
+
+                        
                     }
                 </tbody>
             </Table>
@@ -559,4 +625,32 @@ const Square = ({color}) => {
         <path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/>
         </svg>
     )
+}
+
+function ChangeFormat(data, orderRef) {
+    let dataContent = {};
+    for (let nowItem of orderRef) {
+        dataContent[nowItem.name] = [];
+        for (let nowData of data) {
+            let nowVal;
+            nowVal = 0;
+            for (let add of nowItem.add) {
+                if (add in nowData && nowData[add] !== null) {
+                    nowVal += nowData[add];
+                } else if (add !== nowItem.name && orderRef.some(obj => obj.name === add)) {
+                    nowVal += dataContent[add][dataContent[nowItem.name].length];
+                }
+            }
+            for (let sub of nowItem.sub) {
+                if (sub in nowData && nowData[sub] !== null) {
+                    nowVal -= nowData[sub];
+                } else if (orderRef.some(obj => obj.name === sub)) {
+                    nowVal -= dataContent[sub][dataContent[nowItem.name].length];
+                }
+            }
+            dataContent[nowItem.name].push(nowVal);
+        }
+    }
+    dataContent["date"] = data.map(data => data.date);
+    return dataContent;
 }
