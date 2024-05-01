@@ -151,7 +151,7 @@ export default function StockChart({stock_number}) {
             }
             </Nav>
         </Container>
-        <Container fluid ref={parentElement} id="stock-chart-container" className="w-100 h-75">
+        <Container fluid ref={parentElement} id="stock-chart-container" className="mw-100 w-100 h-75 stock-charts">
         </Container>
     </Container>
     )

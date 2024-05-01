@@ -176,7 +176,7 @@ function StockTrend({stock_number, activeKey="a"}) {
     }, [summaryData, activeKey]);    
 
     return (<>
-        <Container fluid id="stock-trend-container" ref={parentElement} className="w-100 h-75">
+        <Container fluid id="stock-trend-container" ref={parentElement} className="mw-100 w-100 h-50 stock-charts">
         </Container>
         <Container fluid id="stock-trend-progress" className="w-100 pb-2">
             <div className="d-flex flex-row justify-content-between">

@@ -103,7 +103,7 @@ export default function StockTradingInfo({stock_number}) {
     }, [tradingInfo, chartData])
 
     return (
-        <Container fluid id="stocktradinginfo-container" className="w-100 h-100">
+        <Container fluid id="stocktradinginfo-container" className="w-100 h-100 mh-100">
             <div id="multiple-bar-chart" className="w-100 h-25 mb-5 mt-2">
                 <ToggleButtonGroup type="checkbox" onChange={handleChange} value={checkbox} id="tradinginfo-chart-legend" className="d-flex align-items-center flex-row mb-2 w-50">
                     {["外資", "投信", "自營商", "合計"].map((items, index) => {
@@ -114,11 +114,11 @@ export default function StockTradingInfo({stock_number}) {
                         );
                     })}
                 </ToggleButtonGroup>
-                <div id="multiple-bar-chart-content" ref={parentElement} className="mh-100 h-100">
+                <div id="multiple-bar-chart-content" ref={parentElement} className="mh-100 h-100 mw-100 stock-charts">
                     {chartData === null && <Placeholder xs={12} as={Table} animation="wave" />}
                 </div>
             </div>
-            <div className="h-75 mh-75 overflow-y-auto">
+            <div className="overflow-y-auto mb-2" style={{height: '50vh'}}>
                 <Table hover id="tradinginfo-table" className="h-100 w-100">
                     <thead className="text-center text-bold">
                         <tr>

@@ -68,7 +68,7 @@ function HotTrades() {
 
 export default function Sidebar() {
   return (
-    <div className="container-fluid col-md-3 col-lg-3 d-md-block sidebar">
+    <div className="container-fluid col-md-3 col-lg-3 d-md-block sidebar" style={{height: '80vh', maxHeight: '100%'}}>
       <div className="row mb-2 h-50">
         <MyPortfolio />
       </div>

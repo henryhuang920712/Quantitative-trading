@@ -21,10 +21,10 @@ export async function GET(request) {
                 paramStr.push(`${key} = '${value}'`);
             }
         }
-
+        const whereClause = paramStr.length > 0 ? `WHERE ${paramStr.join(" AND ")}` : "";
         const pool = await Pool();
         const result = await pool.request()
-            .query(`SELECT * FROM ${table_name} WHERE ${paramStr.join(" AND ")}`);
+            .query(`SELECT * FROM ${table_name} ${whereClause}`);
 
         // Return the fetched data
         return NextResponse.json(result.recordset);

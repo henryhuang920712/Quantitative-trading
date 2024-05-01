@@ -151,7 +151,7 @@ function StockRevenue({stock_number}) {
     }, [sales])
     return (
         <Container fluid id="stockrevenue-container" className="w-100 h-100">
-            <div id="stockrevenue-chart-container" ref={parentElement} className="w-100 h-25 mb-5 mt-2">
+            <div id="stockrevenue-chart-container" ref={parentElement} className="mw-100 w-100 h-25 mb-5 mt-2 stock-charts">
                 <div id="stockrevenue-chart-legend" className="d-flex align-items-center flex-row">
                     <div className="me-2">
                         {legendValue && <Square color="--bs-dark" />}
@@ -176,7 +176,7 @@ function StockRevenue({stock_number}) {
                                 // split yy-ss-mm-dd then get yy and ss
                                 const year = parseInt(data.date.split("-")[0]);
                                 const month = parseInt(data.date.split("-")[1]);
-                                return <th key={index}>{`${year}-${month}`}</th>
+                                return <th key={index}>{`${year}/${month}`}</th>
                             })
                         }
                     </tr>
@@ -187,7 +187,7 @@ function StockRevenue({stock_number}) {
                             let newSales = ArrangeSales(sales);
                             return (Object.keys(newSales)).map((item, index) => {
                                 return (
-                                    <tr key={index} className={item.includes("總計") ? "table-active" : ""}>
+                                    <tr key={index} className={item.includes("%") ? "table-active" : ""}>
                                         {
                                             (newSales[item]).map((data, index) => {
                                                 return <td key={index}>{formatNumString(data)}</td>
@@ -336,7 +336,7 @@ function StockBalSheet({stock_number}) {
 
     return (
         <Container fluid id="stockbalsheet-container" className="w-100 h-100">
-            <div id="balsheet-chart-container" ref={parentElement} className="w-100 h-25 mb-5 mt-2">
+            <div id="balsheet-chart-container" ref={parentElement} className="mw-100 stock-charts w-100 h-25 mb-5 mt-2">
                 <div id="balsheet-chart-legend" className="d-flex align-items-center flex-row">
                     <div className="me-2">
                         {legendValue && <Square color="--bs-dark" />}
@@ -572,7 +572,7 @@ function StockIncStatement({stock_number}) {
                 </Dropdown.Menu>
                 </Dropdown>
                 </div>
-                <div id="incStatement-chart-container" ref={parentElement} className="h-100 w-100">
+                <div id="incStatement-chart-container" ref={parentElement} className="mw-100 h-100 w-100 stock-charts">
                 </div>
             </div>
             <Table hover responsive="sm" id="incStatement-table">

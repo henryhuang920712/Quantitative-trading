@@ -6,7 +6,7 @@ import StockCompInfo from '@/components/stock_number/stockCompInfo';
 import StockChart from '@/components/stock_number/stockChart';
 import StockFinStats from '@/components/stock_number/stockFinStats';
 import StockTradingInfo from '@/components/stock_number/stockTradingInfo';
-import MyPortfolio from '@/components/sidebar';
+import Sidebar from '@/components/sidebar';
 import Nav from 'react-bootstrap/Nav';
 import { useEffect, useState } from 'react';
 
@@ -50,12 +50,12 @@ export default function StockInfoPage({params: {stock_number}}) {
     }
 
     return (
-        <Container fluid className="py-5 mw-100 w-100 h-100 mh-100 mx-0">
+        <Container fluid className="pt-5 mw-100 w-100 h-100 mh-100 mx-0">
             <div className="row w-100 h-100 mh-100">
                 <main className="h-100 mh-100 col-md-9 ml-sm-auto col-lg-9 px-md-4 px-lg-5 d-flex flex-column">
                     <StockBasicInfo stock_number={stock_number} />
                     <NavTabs />
-                    <Container className="h-100 tab-content pt-2 flex-grow-1" id="nav-tabContent">
+                    <Container className="mh-100 h-100 tab-content pt-2 flex-grow-1" id="nav-tabContent">
                         {nowSelectedTab === 'a' && <StockSummary stock_number={stock_number} />}
                         {nowSelectedTab === 'b' && <StockChart stock_number={stock_number} />}
                         {nowSelectedTab === 'c' && <StockCompInfo stock_number={stock_number} />}
@@ -64,7 +64,7 @@ export default function StockInfoPage({params: {stock_number}}) {
                         {nowSelectedTab === 'e' && <StockTradingInfo stock_number={stock_number} />}
                     </Container>
                 </main>
-                <MyPortfolio />
+                <Sidebar />
             </div>
         </Container>
     )

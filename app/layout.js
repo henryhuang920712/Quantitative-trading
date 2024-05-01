@@ -12,7 +12,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className="vh-100 vw-100 mw-100 d-flex flex-column">
+      <body className="">
       <AuthProvider>
           <NavBarItem />
       </AuthProvider>
